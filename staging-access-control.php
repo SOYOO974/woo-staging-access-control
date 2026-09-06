@@ -3,7 +3,7 @@
  * Plugin Name: Staging Access Control
  * Plugin URI:  https://www.soyoo.re/
  * Description: Automatically restricts access to staging environments while allowing administrators and whitelisted IPs.
- * Version:     1.1.2
+ * Version:     1.1.4
  * Author:      Soyoo.re
  * Author URI:  https://www.soyoo.re/
  * Text Domain: staging-access-control
@@ -25,14 +25,9 @@ $myUpdateChecker = PucFactory::buildUpdateChecker(
 
 //Set the branch that contains the stable release.
 $myUpdateChecker->setBranch('main');
+$myUpdateChecker->getVcsApi()->enableReleaseAssets();
 
-// If a GitHub token is provided in the settings, use it for authentication
-$github_token = get_option( 'sac_github_token', '' );
-if ( ! empty( $github_token ) ) {
-    $myUpdateChecker->setAuthentication( $github_token );
-}
-
-define( 'SAC_VERSION', '1.1.2' );
+define( 'SAC_VERSION', '1.1.4' );
 define( 'SAC_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SAC_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 

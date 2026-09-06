@@ -47,9 +47,6 @@ class SAC_Settings {
         register_setting( 'sac_password_options_group', 'sac_password_message', 'wp_kses_post' );
         register_setting( 'sac_password_options_group', 'sac_password_placeholder', 'sanitize_text_field' );
         register_setting( 'sac_password_options_group', 'sac_password_button_text', 'sanitize_text_field' );
-
-        // Updates Tab
-        register_setting( 'sac_updates_options_group', 'sac_github_token', 'sanitize_text_field' );
     }
 
     public function render_settings_page() {
@@ -142,7 +139,6 @@ class SAC_Settings {
                 <a href="?page=staging-access-control&tab=general" class="nav-tab <?php echo $active_tab == 'general' ? 'nav-tab-active' : ''; ?>">General</a>
                 <a href="?page=staging-access-control&tab=password" class="nav-tab <?php echo $active_tab == 'password' ? 'nav-tab-active' : ''; ?>">Password Page</a>
                 <a href="?page=staging-access-control&tab=logs" class="nav-tab <?php echo $active_tab == 'logs' ? 'nav-tab-active' : ''; ?>">Logs</a>
-                <a href="?page=staging-access-control&tab=updates" class="nav-tab <?php echo $active_tab == 'updates' ? 'nav-tab-active' : ''; ?>">Updates</a>
             </h2>
 
             <?php
@@ -152,8 +148,6 @@ class SAC_Settings {
                 $this->render_password_tab();
             } else if ( $active_tab == 'logs' ) {
                 $this->render_logs_tab();
-            } else if ( $active_tab == 'updates' ) {
-                $this->render_updates_tab();
             }
             ?>
         </div>
@@ -445,28 +439,6 @@ class SAC_Settings {
                     </div>
                 </div>
             <?php endif; ?>
-        </div>
-        <?php
-    }
-
-    private function render_updates_tab() {
-        ?>
-        <div class="sac-wrap">
-            <form method="post" action="options.php">
-                <?php settings_fields( 'sac_updates_options_group' ); ?>
-                <table class="sac-form-table">
-                    <tr>
-                        <th scope="row"><label for="sac_github_token">GitHub Personal Access Token</label></th>
-                        <td>
-                            <input type="password" name="sac_github_token" id="sac_github_token" class="sac-input-text" value="<?php echo esc_attr( get_option( 'sac_github_token', '' ) ); ?>" />
-                            <span class="sac-help-text">Enter your GitHub Personal Access Token to allow automatic plugin updates from the private repository.</span>
-                        </td>
-                    </tr>
-                </table>
-                <p class="submit">
-                    <button type="submit" name="submit" id="submit" class="sac-button-primary">Save Settings</button>
-                </p>
-            </form>
         </div>
         <?php
     }
