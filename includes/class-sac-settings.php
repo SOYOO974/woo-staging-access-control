@@ -47,6 +47,9 @@ class SAC_Settings {
         register_setting( 'sac_password_options_group', 'sac_password_message', 'wp_kses_post' );
         register_setting( 'sac_password_options_group', 'sac_password_placeholder', 'sanitize_text_field' );
         register_setting( 'sac_password_options_group', 'sac_password_button_text', 'sanitize_text_field' );
+
+        // Disable Emails Tab
+        register_setting( 'sac_disable_emails_options_group', 'sac_disable_emails_options' );
     }
 
     public function render_settings_page() {
@@ -138,6 +141,7 @@ class SAC_Settings {
             <h2 class="nav-tab-wrapper">
                 <a href="?page=staging-access-control&tab=general" class="nav-tab <?php echo $active_tab == 'general' ? 'nav-tab-active' : ''; ?>">General</a>
                 <a href="?page=staging-access-control&tab=password" class="nav-tab <?php echo $active_tab == 'password' ? 'nav-tab-active' : ''; ?>">Password Page</a>
+                <a href="?page=staging-access-control&tab=disable_emails" class="nav-tab <?php echo $active_tab == 'disable_emails' ? 'nav-tab-active' : ''; ?>">Disable Emails</a>
                 <a href="?page=staging-access-control&tab=logs" class="nav-tab <?php echo $active_tab == 'logs' ? 'nav-tab-active' : ''; ?>">Logs</a>
             </h2>
 
@@ -146,6 +150,8 @@ class SAC_Settings {
                 $this->render_general_tab();
             } else if ( $active_tab == 'password' ) {
                 $this->render_password_tab();
+            } else if ( $active_tab == 'disable_emails' ) {
+                $this->render_disable_emails_tab();
             } else if ( $active_tab == 'logs' ) {
                 $this->render_logs_tab();
             }
@@ -440,6 +446,104 @@ class SAC_Settings {
                 </div>
             <?php endif; ?>
         </div>
+        <?php
+    }
+
+    private function render_disable_emails_tab() {
+        $options = get_option( 'sac_disable_emails_options', array() );
+        
+        $enabled = isset( $options['enabled'] ) ? $options['enabled'] : 0;
+        $indicator = isset( $options['indicator'] ) ? $options['indicator'] : 'toolbar';
+        $wp_mail = isset( $options['wp_mail'] ) ? $options['wp_mail'] : 1;
+        $wp_mail_from = isset( $options['wp_mail_from'] ) ? $options['wp_mail_from'] : 1;
+        $wp_mail_from_name = isset( $options['wp_mail_from_name'] ) ? $options['wp_mail_from_name'] : 1;
+        $wp_mail_content_type = isset( $options['wp_mail_content_type'] ) ? $options['wp_mail_content_type'] : 1;
+        $wp_mail_charset = isset( $options['wp_mail_charset'] ) ? $options['wp_mail_charset'] : 1;
+        $phpmailer_init = isset( $options['phpmailer_init'] ) ? $options['phpmailer_init'] : 1;
+        $buddypress = isset( $options['buddypress'] ) ? $options['buddypress'] : 0;
+        $events_manager = isset( $options['events_manager'] ) ? $options['events_manager'] : 0;
+
+        $has_mu_plugin = file_exists( WPMU_PLUGIN_DIR . '/sac-disable-emails-mu.php' );
+        ?>
+        <div class="sac-wrap">
+            <form method="post" action="options.php">
+                <?php settings_fields( 'sac_disable_emails_options_group' ); ?>
+                <table class="sac-form-table">
+                    <tr>
+                        <th scope="row"><label for="sac_disable_emails_enabled">Enable Email Disabling</label></th>
+                        <td>
+                            <label class="sac-toggle">
+                                <input type="checkbox" name="sac_disable_emails_options[enabled]" id="sac_disable_emails_enabled" value="1" <?php checked( $enabled, 1 ); ?> />
+                                <span class="sac-slider"></span>
+                            </label>
+                            <span class="sac-help-text">Check this to stop WordPress from sending any emails.</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="sac_disable_emails_indicator">Indicator</label></th>
+                        <td>
+                            <select name="sac_disable_emails_options[indicator]" id="sac_disable_emails_indicator" class="sac-input-text" style="width: auto;">
+                                <option value="toolbar" <?php selected( $indicator, 'toolbar' ); ?>>Toolbar Indicator</option>
+                                <option value="notice" <?php selected( $indicator, 'notice' ); ?>>Notice on all admin pages</option>
+                                <option value="both" <?php selected( $indicator, 'both' ); ?>>Notice and Toolbar indicator</option>
+                                <option value="none" <?php selected( $indicator, 'none' ); ?>>No indicator</option>
+                            </select>
+                            <span class="sac-help-text">Select how you would like to indicate in the WordPress admin that emails are disabled.</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Call WordPress Hooks</th>
+                        <td>
+                            <label><input type="checkbox" name="sac_disable_emails_options[wp_mail]" value="1" <?php checked( $wp_mail, 1 ); ?> /> wp_mail</label><br />
+                            <label><input type="checkbox" name="sac_disable_emails_options[wp_mail_from]" value="1" <?php checked( $wp_mail_from, 1 ); ?> /> wp_mail_from</label><br />
+                            <label><input type="checkbox" name="sac_disable_emails_options[wp_mail_from_name]" value="1" <?php checked( $wp_mail_from_name, 1 ); ?> /> wp_mail_from_name</label><br />
+                            <label><input type="checkbox" name="sac_disable_emails_options[wp_mail_content_type]" value="1" <?php checked( $wp_mail_content_type, 1 ); ?> /> wp_mail_content_type</label><br />
+                            <label><input type="checkbox" name="sac_disable_emails_options[wp_mail_charset]" value="1" <?php checked( $wp_mail_charset, 1 ); ?> /> wp_mail_charset</label><br />
+                            <label><input type="checkbox" name="sac_disable_emails_options[phpmailer_init]" value="1" <?php checked( $phpmailer_init, 1 ); ?> /> phpmailer_init</label><br />
+                            <span class="sac-help-text">Call WordPress hooks so that listeners can act, e.g., log emails.</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="sac_disable_emails_buddypress">BuddyPress</label></th>
+                        <td>
+                            <label><input type="checkbox" name="sac_disable_emails_options[buddypress]" id="sac_disable_emails_buddypress" value="1" <?php checked( $buddypress, 1 ); ?> /> Force BuddyPress to use WordPress emails so that they can be blocked.</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="sac_disable_emails_events_manager">Events Manager</label></th>
+                        <td>
+                            <label><input type="checkbox" name="sac_disable_emails_options[events_manager]" id="sac_disable_emails_events_manager" value="1" <?php checked( $events_manager, 1 ); ?> /> Force Events Manager to use WordPress emails so that they can be blocked.</label>
+                        </td>
+                    </tr>
+                </table>
+                <p class="submit">
+                    <button type="submit" name="submit" id="submit" class="sac-button-primary">Save Settings</button>
+                </p>
+            </form>
+            
+            <hr style="margin: 30px 0; border: 0; border-top: 1px solid #dcdcde;">
+            
+            <h2>Must-Use Plugin (Recommended)</h2>
+            <p>When enabled as a must-use plugin (mu-plugin), the email blocker is always activated before other plugins. This prevents another plugin from declaring <code>wp_mail()</code> first, which would stop the blocker from functioning correctly.</p>
+            
+            <div style="margin-top: 15px; padding: 20px; background: #f6f7f7; border-left: 4px solid #2271b1;">
+                <?php if ( $has_mu_plugin ) : ?>
+                    <p style="margin-top: 0;"><strong>The must-use plugin is currently enabled.</strong></p>
+                    <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'options-general.php?page=staging-access-control&tab=disable_emails&sac_mu_action=remove' ), 'sac_mu_action_nonce' ) ); ?>" class="button button-secondary">Deactivate must-use plugin</a>
+                <?php else : ?>
+                    <p style="margin-top: 0;"><strong>The must-use plugin is currently disabled.</strong></p>
+                    <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'options-general.php?page=staging-access-control&tab=disable_emails&sac_mu_action=install' ), 'sac_mu_action_nonce' ) ); ?>" class="button button-secondary">Activate must-use plugin</a>
+                <?php endif; ?>
+            </div>
+        </div>
+        <style>
+            .sac-toggle { position: relative; display: inline-block; width: 44px; height: 24px; vertical-align: middle; }
+            .sac-toggle input { opacity: 0; width: 0; height: 0; }
+            .sac-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
+            .sac-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+            .sac-toggle input:checked + .sac-slider { background-color: #2271b1; }
+            .sac-toggle input:checked + .sac-slider:before { transform: translateX(20px); }
+        </style>
         <?php
     }
 }

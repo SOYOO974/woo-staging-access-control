@@ -3,7 +3,7 @@
  * Plugin Name: Staging Access Control
  * Plugin URI:  https://www.soyoo.re/
  * Description: Automatically restricts access to staging environments while allowing administrators and whitelisted IPs.
- * Version:     1.1.4
+ * Version:     1.1.5
  * Author:      Soyoo.re
  * Author URI:  https://www.soyoo.re/
  * Text Domain: staging-access-control
@@ -27,7 +27,7 @@ $myUpdateChecker = PucFactory::buildUpdateChecker(
 $myUpdateChecker->setBranch('main');
 $myUpdateChecker->getVcsApi()->enableReleaseAssets();
 
-define( 'SAC_VERSION', '1.1.4' );
+define( 'SAC_VERSION', '1.1.5' );
 define( 'SAC_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SAC_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
@@ -35,6 +35,8 @@ define( 'SAC_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 require_once SAC_PLUGIN_DIR . 'includes/class-sac-logger.php';
 require_once SAC_PLUGIN_DIR . 'includes/class-sac-settings.php';
 require_once SAC_PLUGIN_DIR . 'includes/class-staging-access-control.php';
+require_once SAC_PLUGIN_DIR . 'includes/class-sac-disable-emails.php';
+require_once SAC_PLUGIN_DIR . 'includes/sac-pluggable.php';
 
 // Activation Hook
 register_activation_hook( __FILE__, 'sac_activate_plugin' );
@@ -46,6 +48,9 @@ function sac_activate_plugin() {
 function sac_init_plugin() {
     $sac = new Staging_Access_Control();
     $sac->init();
+    
+    $sac_emails = new SAC_Disable_Emails();
+    $sac_emails->init();
     
     if ( is_admin() ) {
         $settings = new SAC_Settings();
