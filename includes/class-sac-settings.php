@@ -161,6 +161,8 @@ class SAC_Settings {
     }
 
     private function render_general_tab() {
+        $sac = new Staging_Access_Control();
+        $current_ip = $sac->get_visitor_ip();
         ?>
         <div class="sac-wrap">
             <form method="post" action="options.php">
@@ -244,6 +246,20 @@ class SAC_Settings {
                         <td>
                             <textarea name="sac_ip_whitelist" id="sac_ip_whitelist" class="sac-textarea" placeholder="192.168.1.1&#10;10.0.0.1"><?php echo esc_textarea( get_option( 'sac_ip_whitelist' ) ); ?></textarea>
                             <span class="sac-help-text">Enter one IP address per line. These IPs will bypass the restriction.</span>
+                            
+                            <?php if ( ! empty( $current_ip ) ) : ?>
+                                <div style="margin-top: 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                                    <span style="font-size: 13px; color: #1e293b; background: #f1f5f9; padding: 6px 12px; border-radius: 6px; border: 1px solid #e2e8f0; display: inline-flex; align-items: center; gap: 6px;">
+                                        <span>Your Current IP:</span>
+                                        <code id="sac_current_ip_val" style="color: #2563eb; font-weight: 600; font-size: 13px;"><?php echo esc_html( $current_ip ); ?></code>
+                                    </span>
+                                    <button type="button" class="button button-secondary" id="sac_add_current_ip_btn" style="display: inline-flex; align-items: center; gap: 4px;">
+                                        <span class="dashicons dashicons-plus-alt2" style="font-size: 16px; width: 16px; height: 16px; line-height: 16px; margin-top: 1px;"></span>
+                                        Add My Current IP
+                                    </button>
+                                </div>
+                                <div id="sac_ip_added_notice" style="display: none; margin-top: 8px; font-size: 13px; font-weight: 600;"></div>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 </table>
@@ -287,6 +303,36 @@ class SAC_Settings {
                 $('#sac_logo_preview').hide().empty();
                 $('#sac_upload_logo_btn').text('Upload Logo');
                 $(this).remove();
+            });
+
+            // Add Current IP button handler
+            $('#sac_add_current_ip_btn').on('click', function(e) {
+                e.preventDefault();
+                var currentIp = $('#sac_current_ip_val').text().trim();
+                if (!currentIp) return;
+
+                var textarea = $('#sac_ip_whitelist');
+                var lines = textarea.val().split('\n').map(function(ip) { return ip.trim(); }).filter(Boolean);
+
+                if (lines.indexOf(currentIp) === -1) {
+                    lines.push(currentIp);
+                    textarea.val(lines.join('\n'));
+                    $('#sac_ip_added_notice')
+                        .text('✓ IP ' + currentIp + ' added to the list! Please click "Save Settings" below.')
+                        .css('color', '#16a34a')
+                        .stop(true, true)
+                        .fadeIn()
+                        .delay(5000)
+                        .fadeOut();
+                } else {
+                    $('#sac_ip_added_notice')
+                        .text('ℹ IP ' + currentIp + ' is already in the whitelist.')
+                        .css('color', '#d97706')
+                        .stop(true, true)
+                        .fadeIn()
+                        .delay(4000)
+                        .fadeOut();
+                }
             });
         });
         </script>

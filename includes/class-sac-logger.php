@@ -5,6 +5,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class SAC_Logger {
     
+    const MAX_LOGS = 1000;
+    
     public static function get_table_name() {
         global $wpdb;
         return $wpdb->prefix . 'sac_logs';
@@ -33,14 +35,16 @@ class SAC_Logger {
         global $wpdb;
         
         $table_name = self::get_table_name();
-        $user_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
+        $raw_ua     = isset( $_SERVER['HTTP_USER_AGENT'] ) ? wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) : '';
+        $user_agent = mb_substr( sanitize_text_field( $raw_ua ), 0, 255 );
+        $clean_url  = mb_substr( esc_url_raw( $url ), 0, 255 );
         
         $wpdb->insert(
             $table_name,
             array(
                 'ip_address'    => sanitize_text_field( $ip ),
                 'timestamp'     => current_time( 'mysql' ),
-                'requested_url' => esc_url_raw( $url ),
+                'requested_url' => $clean_url,
                 'user_agent'    => $user_agent,
             ),
             array(
@@ -50,5 +54,26 @@ class SAC_Logger {
                 '%s',
             )
         );
+
+        // Automatically purge older logs to prevent database bloat
+        self::purge_old_logs();
+    }
+
+    public static function purge_old_logs( $limit = self::MAX_LOGS ) {
+        global $wpdb;
+        $table_name = self::get_table_name();
+
+        $offset = max( 1, intval( $limit ) );
+        $threshold_id = $wpdb->get_var( $wpdb->prepare(
+            "SELECT id FROM {$table_name} ORDER BY id DESC LIMIT 1 OFFSET %d",
+            $offset
+        ) );
+
+        if ( $threshold_id ) {
+            $wpdb->query( $wpdb->prepare(
+                "DELETE FROM {$table_name} WHERE id <= %d",
+                $threshold_id
+            ) );
+        }
     }
 }

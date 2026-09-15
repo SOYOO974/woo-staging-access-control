@@ -36,19 +36,36 @@ class Staging_Access_Control {
 
     public function is_staging() {
         $site_url = site_url();
-        return ( strpos( $site_url, 'staging' ) !== false );
+        $is_staging = ( strpos( $site_url, 'staging' ) !== false );
+        return (bool) apply_filters( 'sac_is_staging', $is_staging );
     }
 
     public function get_visitor_ip() {
-        // Support for Cloudflare and reverse proxies
+        // Rocket.net operates behind Cloudflare Enterprise, which provides HTTP_CF_CONNECTING_IP reliably.
         if ( isset( $_SERVER['HTTP_CF_CONNECTING_IP'] ) && ! empty( $_SERVER['HTTP_CF_CONNECTING_IP'] ) ) {
-            return sanitize_text_field( wp_unslash( $_SERVER['HTTP_CF_CONNECTING_IP'] ) );
-        } elseif ( isset( $_SERVER['HTTP_X_FORWARDED_FOR'] ) && ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
-            $ips = explode( ',', wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) );
-            return sanitize_text_field( trim( $ips[0] ) );
-        } elseif ( isset( $_SERVER['REMOTE_ADDR'] ) ) {
-            return sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
+            $ip = sanitize_text_field( wp_unslash( $_SERVER['HTTP_CF_CONNECTING_IP'] ) );
+            if ( filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+                return $ip;
+            }
         }
+
+        // Direct client IP (unspoofed by default HTTP headers)
+        if ( isset( $_SERVER['REMOTE_ADDR'] ) && ! empty( $_SERVER['REMOTE_ADDR'] ) ) {
+            $ip = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
+            if ( filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+                return $ip;
+            }
+        }
+
+        // Fallback for custom proxies: extract and validate the first IP in X-Forwarded-For
+        if ( isset( $_SERVER['HTTP_X_FORWARDED_FOR'] ) && ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+            $ips = explode( ',', wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) );
+            $ip = sanitize_text_field( trim( $ips[0] ) );
+            if ( filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+                return $ip;
+            }
+        }
+
         return '';
     }
 
@@ -80,6 +97,11 @@ class Staging_Access_Control {
         // Allow whitelisted IPs
         $visitor_ip = $this->get_visitor_ip();
         if ( $this->is_ip_whitelisted( $visitor_ip ) ) {
+            // Prevent Rocket.net / Cloudflare Edge Cache from caching staging pages for whitelisted visitors
+            if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+                define( 'DONOTCACHEPAGE', true );
+            }
+            nocache_headers();
             return;
         }
 
@@ -88,6 +110,11 @@ class Staging_Access_Control {
             $correct_password = get_option( 'sac_bypass_password', 'soyoo' );
             $expected_token = wp_hash( 'sac_access_' . $correct_password );
             if ( $_COOKIE['sac_bypass_token'] === $expected_token ) {
+                // Prevent Rocket.net / Cloudflare Edge Cache from caching staging pages for unlocked sessions
+                if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+                    define( 'DONOTCACHEPAGE', true );
+                }
+                nocache_headers();
                 return; // Grant access smoothly
             }
         }
