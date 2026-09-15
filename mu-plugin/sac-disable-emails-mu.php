@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Staging Access Control - Disable Emails (MU)
  * Description: Ensures that the Disable Emails feature of Staging Access Control loads before all other plugins.
- * Version: 1.1.6
+ * Version: 1.1.7
  * Author: Soyoo.re
  */
 

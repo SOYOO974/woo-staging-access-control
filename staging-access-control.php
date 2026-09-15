@@ -3,7 +3,7 @@
  * Plugin Name: Staging Access Control
  * Plugin URI:  https://www.soyoo.re/
  * Description: Automatically restricts access to staging environments while allowing administrators and whitelisted IPs.
- * Version:     1.1.6
+ * Version:     1.1.7
  * Author:      Soyoo.re
  * Author URI:  https://www.soyoo.re/
  * Text Domain: staging-access-control
@@ -27,9 +27,10 @@ $myUpdateChecker = PucFactory::buildUpdateChecker(
 $myUpdateChecker->setBranch('main');
 $myUpdateChecker->getVcsApi()->enableReleaseAssets();
 
-define( 'SAC_VERSION', '1.1.6' );
+define( 'SAC_VERSION', '1.1.7' );
 define( 'SAC_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SAC_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+define( 'SAC_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
 
 // Require core classes.
 require_once SAC_PLUGIN_DIR . 'includes/class-sac-logger.php';

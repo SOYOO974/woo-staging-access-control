@@ -9,6 +9,20 @@ class SAC_Settings {
         add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
         add_action( 'admin_init', array( $this, 'register_settings' ) );
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
+
+        if ( defined( 'SAC_PLUGIN_BASENAME' ) ) {
+            add_filter( 'plugin_action_links_' . SAC_PLUGIN_BASENAME, array( $this, 'add_action_links' ) );
+        }
+    }
+
+    public function add_action_links( $actions ) {
+        $settings_link = sprintf(
+            '<a href="%s">%s</a>',
+            esc_url( admin_url( 'options-general.php?page=staging-access-control' ) ),
+            esc_html__( 'Settings', 'staging-access-control' )
+        );
+        array_unshift( $actions, $settings_link );
+        return $actions;
     }
 
     public function add_settings_page() {

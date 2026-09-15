@@ -2,7 +2,7 @@
 
 > **Dépôt GitHub** : [SOYOO974/woo-staging-access-control](https://github.com/SOYOO974/woo-staging-access-control)  
 > **Auteur** : Soyoo.re (`dev@soyoo.re`)  
-> **Version actuelle** : 1.1.6  
+> **Version actuelle** : 1.1.7  
 > **Type** : Extension WordPress / WooCommerce  
 > **Mises à jour automatiques** : Intégrées via *Plugin Update Checker (PUC) v5* branché sur `main`
 
@@ -175,6 +175,8 @@ Plusieurs optimisations majeures ont été déployées pour consolider l'extensi
    - Résolution dynamique multi-chemins (`woo-staging-access-control` et `staging-access-control`, avec recherche `glob`) pour garantir l'interception de `wp_mail()` quel que soit le nom du dossier d'installation Git/ZIP.
 6. **Extensibilité de la Détection Staging** :
    - Ajout du filtre WordPress `sac_is_staging` pour permettre un override si nécessaire.
+7. **Lien Direct vers les Réglages (v1.1.7)** :
+   - Implémentation du filtre `plugin_action_links_{$basename}` pour ajouter le raccourci *Settings* (Réglages) directement sous le nom de l'extension sur la page `wp-admin/plugins.php`.
 
 ---
 
